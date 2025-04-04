@@ -1,14 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import argon2 from 'argon2';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class EncryptionsService {
-  async hash(text: string) {
-    const hash = await argon2.hash(text);
-    return hash;
+  async hashText(text: string) {
+    try {
+      return argon2.hash(text);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to hash data.');
+    }
   }
 
-  async verify(hashedText: string, plainText: string) {
-    return argon2.verify(hashedText, plainText);
+  async verifyText(hashedText: string, plainText: string) {
+    try {
+      return argon2.verify(hashedText, plainText);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to verify data.');
+    }
   }
 }

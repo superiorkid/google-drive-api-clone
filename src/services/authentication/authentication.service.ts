@@ -20,11 +20,10 @@ export class AuthenticationService {
       this.userService.findOneByUsername(createUserDTO.username),
     ]);
 
-    if (userByEmail || userByUsername) {
-      throw new ConflictException('');
-    }
+    if (userByEmail) throw new ConflictException('Email already in use.');
+    if (userByUsername) throw new ConflictException('Username already taken.');
 
-    const hashedPassword = await this.encryptionService.hash(
+    const hashedPassword = await this.encryptionService.hashText(
       createUserDTO.password,
     );
 
@@ -37,7 +36,7 @@ export class AuthenticationService {
         message: 'User register successfully',
       };
     } catch (error) {
-      throw new InternalServerErrorException('');
+      throw new InternalServerErrorException('Failed to create user account.');
     }
   }
 }
