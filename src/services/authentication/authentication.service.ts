@@ -1,23 +1,31 @@
 import {
+  BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { UsersRepositoryService } from '../users/users-repository.service';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import { CreateUserDTO } from 'src/cores/dtos/create-user.dto';
+import { LoginDTO } from 'src/cores/dtos/login.dto';
 import { EncryptionsService } from '../encryptions/encryptions.service';
+import { UsersRepositoryService } from '../users/users-repository.service';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
-    private userService: UsersRepositoryService,
+    private userRepository: UsersRepositoryService,
     private encryptionService: EncryptionsService,
+    private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async signUp(createUserDTO: CreateUserDTO) {
     const [userByEmail, userByUsername] = await Promise.all([
-      this.userService.findOneByEmail(createUserDTO.email),
-      this.userService.findOneByUsername(createUserDTO.username),
+      this.userRepository.findOneByEmail(createUserDTO.email),
+      this.userRepository.findOneByUsername(createUserDTO.username),
     ]);
 
     if (userByEmail) throw new ConflictException('Email already in use.');
@@ -29,7 +37,7 @@ export class AuthenticationService {
 
     createUserDTO.password = hashedPassword;
     try {
-      await this.userService.create(createUserDTO);
+      await this.userRepository.create(createUserDTO);
 
       return {
         success: true,
@@ -38,5 +46,75 @@ export class AuthenticationService {
     } catch (error) {
       throw new InternalServerErrorException('Failed to create user account.');
     }
+  }
+
+  async signIn(user: User) {
+    const tokens = await this.getTokens(user);
+    const hashedRefreshToken = await this.encryptionService.hashText(
+      tokens.refreshToken,
+    );
+    await this.userRepository.update({
+      id: user.id,
+      updateUserDTO: { refreshToken: hashedRefreshToken },
+    });
+    return tokens;
+  }
+
+  async validateUser(loginDTO: LoginDTO) {
+    const user = await this.userRepository.findOneByEmail(loginDTO.email);
+    if (!user) throw new BadRequestException('User does not exists.');
+    const passwordMatches = await this.encryptionService.verifyText(
+      user.password || '',
+      loginDTO.password,
+    );
+    if (!passwordMatches)
+      throw new BadRequestException('Password does not match.');
+    return user;
+  }
+
+  async getTokens(user: User) {
+    const payload = { sub: user.id, email: user.email };
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.getOrThrow<'string'>(
+          'ACCESS_TOKEN_SECRET_KEY',
+        ),
+        expiresIn: '15m',
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.getOrThrow<'string'>(
+          'REFRESH_TOKEN_SECRET_KEY',
+        ),
+        expiresIn: '7d',
+      }),
+    ]);
+    return { accessToken, refreshToken };
+  }
+
+  async logout(userId: string) {
+    return this.userRepository.update({
+      id: userId,
+      updateUserDTO: { refreshToken: undefined },
+    });
+  }
+
+  async refreshToken(userId: string, refreshToken: string) {
+    const user = await this.userRepository.findOneById(userId);
+    if (!user || !user.refreshToken)
+      throw new ForbiddenException('Access denied.');
+    const refreshTokenMatches = await this.encryptionService.verifyText(
+      user.refreshToken,
+      refreshToken,
+    );
+    if (!refreshTokenMatches) throw new ForbiddenException('Access denied.');
+    const tokens = await this.getTokens(user);
+    const hashedRefreshToken = await this.encryptionService.hashText(
+      tokens.refreshToken,
+    );
+    await this.userRepository.update({
+      id: user.id,
+      updateUserDTO: { refreshToken: hashedRefreshToken },
+    });
+    return tokens;
   }
 }
