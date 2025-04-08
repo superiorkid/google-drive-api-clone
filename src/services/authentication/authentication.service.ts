@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -35,9 +36,11 @@ export class AuthenticationService {
       createUserDTO.password,
     );
 
-    createUserDTO.password = hashedPassword;
     try {
+      createUserDTO.password = hashedPassword;
       await this.userRepository.create(createUserDTO);
+
+      // TODO: send email verification here
 
       return {
         success: true,
@@ -92,10 +95,22 @@ export class AuthenticationService {
   }
 
   async logout(userId: string) {
-    return this.userRepository.update({
-      id: userId,
-      updateUserDTO: { refreshToken: undefined },
-    });
+    const user = await this.userRepository.findOneById(userId);
+    if (!user) throw new NotFoundException('User not found.');
+
+    try {
+      await this.userRepository.update({
+        id: userId,
+        updateUserDTO: { refreshToken: undefined },
+      });
+
+      return {
+        success: true,
+        message: 'User logged out successfully',
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to logout user.');
+    }
   }
 
   async refreshToken(userId: string, refreshToken: string) {
@@ -107,14 +122,19 @@ export class AuthenticationService {
       refreshToken,
     );
     if (!refreshTokenMatches) throw new ForbiddenException('Access denied.');
-    const tokens = await this.getTokens(user);
-    const hashedRefreshToken = await this.encryptionService.hashText(
-      tokens.refreshToken,
-    );
-    await this.userRepository.update({
-      id: user.id,
-      updateUserDTO: { refreshToken: hashedRefreshToken },
-    });
-    return tokens;
+
+    try {
+      const tokens = await this.getTokens(user);
+      const hashedRefreshToken = await this.encryptionService.hashText(
+        tokens.refreshToken,
+      );
+      await this.userRepository.update({
+        id: user.id,
+        updateUserDTO: { refreshToken: hashedRefreshToken },
+      });
+      return { success: true, data: tokens, message: 'Token refreshed' };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to refresh token.');
+    }
   }
 }
