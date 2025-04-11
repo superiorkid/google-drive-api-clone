@@ -5,11 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { addSeconds } from 'date-fns';
 import crypto from 'node:crypto';
+
 import { TypedEventEmitter } from '../event-emiiter/typed-event-emitter.class';
 import { UsersRepositoryService } from '../users/users-repository.service';
 import { EmailVerificationRepository } from './email-verification.repository';
-import { addSeconds } from 'date-fns';
 
 @Injectable()
 export class EmailVerificationService {

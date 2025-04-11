@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+
 import { AuthenticationController } from 'src/controllers/authentication/authentication.controller';
 import { AccessTokenGuard } from 'src/cores/guards/access-token.guard';
 import { AccessTokenStrategy } from 'src/cores/strategies/access-token.strategy';

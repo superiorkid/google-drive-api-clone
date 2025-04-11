@@ -3,6 +3,7 @@ import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'node:path';
+
 import { EmailsService } from 'src/services/emails/emails.service';
 
 @Module({

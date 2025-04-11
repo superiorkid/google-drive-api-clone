@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+
 import { TypedEventEmitter } from 'src/services/event-emiiter/typed-event-emitter.class';
 
 @Global()

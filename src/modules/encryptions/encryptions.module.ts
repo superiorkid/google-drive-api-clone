@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { EncryptionsService } from 'src/services/encryptions/encryptions.service';
 
 @Module({

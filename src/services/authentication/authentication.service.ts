@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { addSeconds } from 'date-fns';
 import { randomBytes } from 'node:crypto';
+
 import { CreateUserDTO } from 'src/cores/dtos/create-user.dto';
 import { LoginDTO } from 'src/cores/dtos/login.dto';
 import { DatabasesService } from '../databases/databases.service';
