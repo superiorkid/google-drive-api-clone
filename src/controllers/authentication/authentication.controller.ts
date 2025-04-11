@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -27,14 +29,19 @@ import { Request } from 'express';
 import { Public } from 'src/cores/decorators/public.decorator';
 import { CreateUserDTO } from 'src/cores/dtos/create-user.dto';
 import { LoginDTO } from 'src/cores/dtos/login.dto';
+import { ResendVerificationEmailDTO } from 'src/cores/dtos/resend-verification-email.dto';
 import { LocalGuard } from 'src/cores/guards/local.guard';
 import { RefreshTokenGuard } from 'src/cores/guards/refresh-token.guard';
 import { AuthenticationService } from 'src/services/authentication/authentication.service';
+import { EmailVerificationService } from 'src/services/email-verification/email-verification.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthenticationController {
-  constructor(private authenticationService: AuthenticationService) {}
+  constructor(
+    private authenticationService: AuthenticationService,
+    private emailVerificationService: EmailVerificationService,
+  ) {}
 
   @Public()
   @Post('sign-up')
@@ -120,5 +127,61 @@ export class AuthenticationController {
   async logout(@Req() request: Request) {
     const userId = request?.user?.['sub'];
     return this.authenticationService.logout(userId);
+  }
+
+  @Get('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify user email',
+    description:
+      'Validates the email verification token and marks the user email as verified',
+  })
+  @ApiBadRequestResponse({
+    description: 'Returns when token is invalid, already used, or expired',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Returns when there is an error while updating user verification status',
+  })
+  @ApiOkResponse({
+    description: 'Returns success message when email is successfully verified',
+  })
+  @ApiQuery({
+    name: 'token',
+    description: 'Email verification token sent to the user',
+    required: true,
+    example: 'a1b2c3d4-e5f6-7890-g1h2-3456ij7890kl',
+  })
+  async verifyEmail(@Query('token') token: string) {
+    return this.emailVerificationService.verifyEmail(token);
+  }
+
+  @Public()
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Resend verification email',
+    description: 'Resends the verification email to the user',
+  })
+  @ApiBody({
+    type: ResendVerificationEmailDTO,
+    description: 'Email address to resend verification to',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid email format or email not found',
+  })
+  @ApiOkResponse({
+    description: 'Verification email sent successfully',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Error sending verification email',
+  })
+  @ApiNotFoundResponse({ description: '' })
+  async resendVerificationEmail(
+    @Body() resendVerificationEmalDTO: ResendVerificationEmailDTO,
+  ) {
+    return this.emailVerificationService.resendVerificationEmail(
+      resendVerificationEmalDTO.email,
+    );
   }
 }

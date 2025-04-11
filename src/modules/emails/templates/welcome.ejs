@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <% include ("./shared/head.ejs") %>
+  <body>
+    <main
+      style="
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+      "
+    >
+      <div style="text-align: center; margin-bottom: 30px">
+        <h1 style="color: #1a73e8; margin-bottom: 20px">
+          Welcome to GDrive Clone!
+        </h1>
+        <p style="font-size: 18px; color: #5f6368">
+          Your cloud storage journey begins here
+        </p>
+      </div>
+
+      <div
+        style="
+          background-color: #f8f9fa;
+          border-radius: 8px;
+          padding: 24px;
+          margin-bottom: 30px;
+        "
+      >
+        <p style="font-size: 16px; color: #3c4043; margin-bottom: 20px">
+          Dear <%= locals.username %>,
+        </p>
+        <p style="font-size: 16px; color: #3c4043; line-height: 1.6">
+          Thank you for joining GDrive Clone! We're excited to have you on
+          board. Your account has been successfully created, and you're ready to
+          start using our cloud storage service.
+        </p>
+      </div>
+
+      <div style="margin-bottom: 30px">
+        <h2 style="color: #1a73e8; font-size: 20px; margin-bottom: 15px">
+          What you can do now:
+        </h2>
+        <ul style="list-style: none; padding: 0">
+          <li
+            style="margin-bottom: 12px; padding-left: 24px; position: relative"
+          >
+            📁 Store and organize your files securely
+          </li>
+          <li
+            style="margin-bottom: 12px; padding-left: 24px; position: relative"
+          >
+            🔄 Sync your files across all devices
+          </li>
+          <li
+            style="margin-bottom: 12px; padding-left: 24px; position: relative"
+          >
+            👥 Share files and folders with others
+          </li>
+          <li
+            style="margin-bottom: 12px; padding-left: 24px; position: relative"
+          >
+            🔒 Access your files anywhere, anytime
+          </li>
+        </ul>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px">
+        <a
+          href="http://localhost:3000"
+          style="
+            background-color: #1a73e8;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+          "
+        >
+          Get Started Now
+        </a>
+      </div>
+    </main>
+
+    <% include ("./shared/footer.ejs") %>
+  </body>
+</html>

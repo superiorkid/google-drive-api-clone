@@ -41,7 +41,7 @@ export class UsersRepositoryService {
     const { id, updateUserDTO } = params;
     const {
       email,
-      isVerified,
+      verifyAt,
       lastLoginAt,
       password,
       refreshToken,
@@ -54,7 +54,7 @@ export class UsersRepositoryService {
         email,
         username,
         password,
-        isVerified,
+        verifyAt,
         lastLoginAt,
         refreshToken,
         role,

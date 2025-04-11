@@ -19,17 +19,33 @@ enum Role {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  username     String    @unique
-  email        String    @unique
-  password     String?
-  role         Role      @default(USER)
-  isVerified   DateTime? @map("is_verified")
-  lastLoginAt  DateTime? @map("last_login_at")
-  refreshToken String?   @map("refresh_token")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt() @map("updated_at")
+  id                 String              @id @default(cuid())
+  username           String              @unique
+  email              String              @unique
+  password           String?
+  role               Role                @default(USER)
+  verifyAt           DateTime?           @map("verify_at")
+  lastLoginAt        DateTime?           @map("last_login_at")
+  refreshToken       String?             @map("refresh_token")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt() @map("updated_at")
+  emailVerifications EmailVerification[]
 
   @@index([username, email, createdAt])
   @@map("users")
+}
+
+model EmailVerification {
+  id        String    @default(cuid())
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  used      Boolean   @default(false)
+  usedAt    DateTime? @map("used_at")
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@index([used, expiresAt, createdAt])
+  @@map("email_verifications")
 }

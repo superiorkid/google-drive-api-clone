@@ -21,7 +21,7 @@ export class UpdateUserDTO extends PartialType(
   })
   @IsOptional()
   @IsDateString()
-  isVerified?: Date;
+  verifyAt?: Date;
 
   @ApiPropertyOptional({
     description: 'Timestamp of last login.',

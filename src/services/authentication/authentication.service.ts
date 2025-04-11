@@ -9,9 +9,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
+import { addSeconds } from 'date-fns';
+import { randomBytes } from 'node:crypto';
 import { CreateUserDTO } from 'src/cores/dtos/create-user.dto';
 import { LoginDTO } from 'src/cores/dtos/login.dto';
+import { DatabasesService } from '../databases/databases.service';
+import { EmailVerificationRepository } from '../email-verification/email-verification.repository';
 import { EncryptionsService } from '../encryptions/encryptions.service';
+import { TypedEventEmitter } from '../event-emiiter/typed-event-emitter.class';
 import { UsersRepositoryService } from '../users/users-repository.service';
 
 @Injectable()
@@ -21,6 +26,9 @@ export class AuthenticationService {
     private encryptionService: EncryptionsService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private eventEmitter: TypedEventEmitter,
+    private emailVerificationRepository: EmailVerificationRepository,
+    private db: DatabasesService,
   ) {}
 
   async signUp(createUserDTO: CreateUserDTO) {
@@ -38,9 +46,33 @@ export class AuthenticationService {
 
     try {
       createUserDTO.password = hashedPassword;
-      await this.userRepository.create(createUserDTO);
+      const user = await this.userRepository.create(createUserDTO);
 
-      // TODO: send email verification here
+      // generate verification token
+      const token = randomBytes(32).toString('hex');
+      const expiresAt = addSeconds(
+        new Date(),
+        this.configService.getOrThrow<number>('EMAIL_VERIFICATION_EXPIRATION'),
+      );
+
+      await this.emailVerificationRepository.create({
+        expiresAt,
+        token,
+        userId: user.id,
+      });
+
+      const verificationLink = `${this.configService.getOrThrow<string>('APP_URL')}/auth/verify-email?token=${token}`;
+
+      this.eventEmitter.emit('user.welcome', {
+        email: createUserDTO.email,
+        username: createUserDTO.username,
+      });
+
+      this.eventEmitter.emit('user.verifyEmail', {
+        username: createUserDTO.username,
+        email: createUserDTO.email,
+        link: verificationLink,
+      });
 
       return {
         success: true,
