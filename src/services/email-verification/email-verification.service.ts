@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { addSeconds } from 'date-fns';
-import crypto from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 
 import { TypedEventEmitter } from '../event-emiiter/typed-event-emitter.class';
 import { UsersRepositoryService } from '../users/users-repository.service';
@@ -24,7 +24,7 @@ export class EmailVerificationService {
   async createVerificationToken(userId: string) {
     await this.emailVerificationRepository.invalidateUserTokens(userId);
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = randomBytes(32).toString('hex');
     const expiresAt = addSeconds(
       new Date(),
       this.configService.getOrThrow<number>('EMAIL_VERIFICATION_EXPIRATION'),
@@ -35,19 +35,31 @@ export class EmailVerificationService {
     return token;
   }
 
-  async resendVerificationEmail(userId: string) {
-    const user = await this.userRepository.findOneById(userId);
+  async resendVerificationEmail(email: string) {
+    const user = await this.userRepository.findOneByEmail(email);
     if (!user) throw new NotFoundException('User not found.');
     if (user.verifyAt) throw new BadRequestException('Email already verified.');
 
-    const token = await this.createVerificationToken(userId);
-    const verificationLink = `${this.configService.getOrThrow<string>('APP_URL')}/verify-email?token=${token}`;
+    try {
+      const token = await this.createVerificationToken(user.id);
+      const verificationLink = `${this.configService.getOrThrow<string>('APP_URL')}/auth/verify-email?token=${token}`;
 
-    this.eventEmitter.emit('user.verifyEmail', {
-      email: user.email,
-      username: user.username,
-      link: verificationLink,
-    });
+      this.eventEmitter.emit('user.verifyEmail', {
+        email: user.email,
+        username: user.username,
+        link: verificationLink,
+      });
+
+      return {
+        success: true,
+        message:
+          'Verification email has been resent successfully. Please check your inbox.',
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to resend verification email. Please try again later.',
+      );
+    }
   }
 
   async verifyEmail(token: string) {
