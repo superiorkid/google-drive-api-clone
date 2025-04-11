@@ -98,7 +98,11 @@ export class AuthenticationService {
 
   async validateUser(loginDTO: LoginDTO) {
     const user = await this.userRepository.findOneByEmail(loginDTO.email);
+
     if (!user) throw new BadRequestException('User does not exists.');
+    if (!user.verifyAt)
+      throw new ForbiddenException('User email is not verified.');
+
     const passwordMatches = await this.encryptionService.verifyText(
       user.password || '',
       loginDTO.password,

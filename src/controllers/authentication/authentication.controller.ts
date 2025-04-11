@@ -130,6 +130,7 @@ export class AuthenticationController {
     return this.authenticationService.logout(userId);
   }
 
+  @Public()
   @Get('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
