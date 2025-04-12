@@ -25,8 +25,8 @@ export class EmailsService {
 
   @OnEvent('user.verifyEmail')
   async verifyEmail(data: EventPayloads['user.verifyEmail']) {
-    const { email, link, username } = data;
-    const subject = `GDrive clone: Verify your account!`;
+    const { email, verifyLink, username } = data;
+    const subject = 'GDrive clone: Verify your account!';
 
     await this.mailerService.sendMail({
       to: email,
@@ -34,7 +34,23 @@ export class EmailsService {
       template: './verify-email',
       context: {
         username,
-        link,
+        verifyLink,
+      },
+    });
+  }
+
+  @OnEvent('user.resetPassword')
+  async resetPassword(data: EventPayloads['user.resetPassword']) {
+    const { email, resetLink, username } = data;
+    const subject = 'GDrive clone: Reset your password!';
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject,
+      template: './reset-password',
+      context: {
+        username,
+        resetLink,
       },
     });
   }

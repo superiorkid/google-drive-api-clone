@@ -8,14 +8,14 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+import { AuthTokenType, User } from '@prisma/client';
 import { addSeconds } from 'date-fns';
 import { randomBytes } from 'node:crypto';
 
 import { CreateUserDTO } from 'src/cores/dtos/create-user.dto';
 import { LoginDTO } from 'src/cores/dtos/login.dto';
+import { AuthTokenRepository } from '../auth-token/auth-token.repository';
 import { DatabasesService } from '../databases/databases.service';
-import { EmailVerificationRepository } from '../email-verification/email-verification.repository';
 import { EncryptionsService } from '../encryptions/encryptions.service';
 import { TypedEventEmitter } from '../event-emiiter/typed-event-emitter.class';
 import { UsersRepositoryService } from '../users/users-repository.service';
@@ -28,8 +28,7 @@ export class AuthenticationService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private eventEmitter: TypedEventEmitter,
-    private emailVerificationRepository: EmailVerificationRepository,
-    private db: DatabasesService,
+    private authTokenRepository: AuthTokenRepository,
   ) {}
 
   async signUp(createUserDTO: CreateUserDTO) {
@@ -56,7 +55,8 @@ export class AuthenticationService {
         this.configService.getOrThrow<number>('EMAIL_VERIFICATION_EXPIRATION'),
       );
 
-      await this.emailVerificationRepository.create({
+      await this.authTokenRepository.create({
+        type: AuthTokenType.EMAIL_VERIFICATION,
         expiresAt,
         token,
         userId: user.id,
@@ -72,7 +72,7 @@ export class AuthenticationService {
       this.eventEmitter.emit('user.verifyEmail', {
         username: createUserDTO.username,
         email: createUserDTO.email,
-        link: verificationLink,
+        verifyLink: verificationLink,
       });
 
       return {

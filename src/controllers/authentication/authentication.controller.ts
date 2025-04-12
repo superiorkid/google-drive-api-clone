@@ -29,19 +29,21 @@ import { Request } from 'express';
 
 import { Public } from 'src/cores/decorators/public.decorator';
 import { CreateUserDTO } from 'src/cores/dtos/create-user.dto';
+import { ForgotPasswordDTO } from 'src/cores/dtos/forgot-password.dto';
 import { LoginDTO } from 'src/cores/dtos/login.dto';
 import { ResendVerificationEmailDTO } from 'src/cores/dtos/resend-verification-email.dto';
+import { ResetPasswordDTO } from 'src/cores/dtos/reset-password.dto';
 import { LocalGuard } from 'src/cores/guards/local.guard';
 import { RefreshTokenGuard } from 'src/cores/guards/refresh-token.guard';
+import { AuthTokenService } from 'src/services/auth-token/auth-token.service';
 import { AuthenticationService } from 'src/services/authentication/authentication.service';
-import { EmailVerificationService } from 'src/services/email-verification/email-verification.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthenticationController {
   constructor(
     private authenticationService: AuthenticationService,
-    private emailVerificationService: EmailVerificationService,
+    private authTokenService: AuthTokenService,
   ) {}
 
   @Public()
@@ -155,7 +157,7 @@ export class AuthenticationController {
     example: 'a1b2c3d4-e5f6-7890-g1h2-3456ij7890kl',
   })
   async verifyEmail(@Query('token') token: string) {
-    return this.emailVerificationService.verifyEmail(token);
+    return this.authTokenService.verifyEmail(token);
   }
 
   @Public()
@@ -182,8 +184,60 @@ export class AuthenticationController {
   async resendVerificationEmail(
     @Body() resendVerificationEmalDTO: ResendVerificationEmailDTO,
   ) {
-    return this.emailVerificationService.resendVerificationEmail(
+    return this.authTokenService.resendVerificationEmail(
       resendVerificationEmalDTO.email,
     );
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @ApiOperation({
+    summary: 'Request Password Reset',
+    description: 'Sends a password reset email to the user.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'The request is invalid. For example, the email is not in the correct format.',
+  })
+  @ApiNotFoundResponse({
+    description: 'No user found with the provided email address.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'An unexpected error occurred while processing the request.',
+  })
+  @ApiBody({
+    type: ForgotPasswordDTO,
+    description: "DTO containing the user's email address for password reset.",
+  })
+  async forgotPassword(@Body() forgotPasswordDTO: ForgotPasswordDTO) {
+    return this.authTokenService.forgotPassword(forgotPasswordDTO.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset user password',
+    description:
+      'Allows users to reset their password using a valid password reset token. This endpoint is typically called after the user submits the new password form.',
+  })
+  @ApiBody({
+    type: ResetPasswordDTO,
+    description:
+      'DTO containing the password reset token and the new password.',
+  })
+  @ApiOkResponse({
+    description: 'Password has been successfully reset.',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Invalid or expired token, or new password does not meet the required criteria.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'An unexpected error occurred while resetting the password.',
+  })
+  async resetPassword(@Body() resetPasswordDTO: ResetPasswordDTO) {
+    const { token, password } = resetPasswordDTO;
+    return this.authTokenService.resetPassword(token, password);
   }
 }

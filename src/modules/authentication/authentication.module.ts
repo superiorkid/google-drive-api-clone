@@ -7,12 +7,12 @@ import { AccessTokenGuard } from 'src/cores/guards/access-token.guard';
 import { AccessTokenStrategy } from 'src/cores/strategies/access-token.strategy';
 import { LocalStrategy } from 'src/cores/strategies/local.strategy';
 import { RefreshTokenStrategy } from 'src/cores/strategies/refresh-token.strategy';
+import { AuthTokenRepository } from 'src/services/auth-token/auth-token.repository';
+import { AuthTokenService } from 'src/services/auth-token/auth-token.service';
 import { AuthenticationService } from 'src/services/authentication/authentication.service';
-import { EmailVerificationRepository } from 'src/services/email-verification/email-verification.repository';
-import { EmailVerificationService } from 'src/services/email-verification/email-verification.service';
+import { DatabasesModule } from '../databases/databases.module';
 import { EncryptionsModule } from '../encryptions/encryptions.module';
 import { UsersModule } from '../users/users.module';
-import { DatabasesModule } from '../databases/databases.module';
 
 @Module({
   imports: [
@@ -27,8 +27,8 @@ import { DatabasesModule } from '../databases/databases.module';
     LocalStrategy,
     AccessTokenStrategy,
     RefreshTokenStrategy,
-    EmailVerificationRepository,
-    EmailVerificationService,
+    AuthTokenRepository,
+    AuthTokenService,
     { provide: APP_GUARD, useClass: AccessTokenGuard },
   ],
 })

@@ -19,33 +19,39 @@ enum Role {
 }
 
 model User {
-  id                 String              @id @default(cuid())
-  username           String              @unique
-  email              String              @unique
-  password           String?
-  role               Role                @default(USER)
-  verifyAt           DateTime?           @map("verify_at")
-  lastLoginAt        DateTime?           @map("last_login_at")
-  refreshToken       String?             @map("refresh_token")
-  createdAt          DateTime            @default(now()) @map("created_at")
-  updatedAt          DateTime            @updatedAt() @map("updated_at")
-  emailVerifications EmailVerification[]
+  id           String      @id @default(cuid())
+  username     String      @unique
+  email        String      @unique
+  password     String?
+  role         Role        @default(USER)
+  verifyAt     DateTime?   @map("verify_at")
+  lastLoginAt  DateTime?   @map("last_login_at")
+  refreshToken String?     @map("refresh_token")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt() @map("updated_at")
+  authTokens   AuthToken[]
 
   @@index([username, email, createdAt])
   @@map("users")
 }
 
-model EmailVerification {
-  id        String    @default(cuid())
-  token     String    @unique
-  expiresAt DateTime  @map("expires_at")
-  used      Boolean   @default(false)
-  usedAt    DateTime? @map("used_at")
+model AuthToken {
+  id        String        @default(cuid())
+  token     String        @unique
+  type      AuthTokenType @default(EMAIL_VERIFICATION)
+  expiresAt DateTime      @map("expires_at")
+  used      Boolean       @default(false)
+  usedAt    DateTime?     @map("used_at")
   userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
 
-  @@index([used, expiresAt, createdAt])
-  @@map("email_verifications")
+  @@index([used, expiresAt, createdAt, type])
+  @@map("auth_tokens")
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
 }

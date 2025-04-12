@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsDateString } from 'class-validator';
 
-export class UpdateEmailVerificationDTO {
+export class UpdateAuthTokenDTO {
   @IsBoolean()
   @Transform(({ value }) => value === 'true')
   used: boolean;
