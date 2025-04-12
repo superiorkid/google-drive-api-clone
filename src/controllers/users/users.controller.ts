@@ -16,7 +16,9 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 import { Request } from 'express';
+import { Roles } from 'src/cores/decorators/roles.decorator';
 
 import { UsersService } from 'src/services/users/users.service';
 
@@ -25,6 +27,17 @@ import { UsersService } from 'src/services/users/users.service';
 @ApiBearerAuth()
 export class UsersController {
   constructor(private usersService: UsersService) {}
+
+  @Get()
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '', description: '' })
+  @ApiOkResponse({ description: '' })
+  @ApiInternalServerErrorResponse({ description: '' })
+  @ApiUnauthorizedResponse({ description: '' })
+  async usersList() {
+    return this.usersService.usersList();
+  }
 
   @Get('me')
   @HttpCode(HttpStatus.OK)

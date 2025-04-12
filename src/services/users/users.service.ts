@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 
 import { UsersRepositoryService } from './users-repository.service';
-import { UpdateUserDTO } from 'src/cores/dtos/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -59,6 +58,21 @@ export class UsersService {
       };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('');
+    }
+  }
+
+  async usersList() {
+    try {
+      const users = await this.usersRepository.findMany({ skip: 0, take: 10 });
+
+      return {
+        success: true,
+        message: '',
+        data: users,
+      };
+    } catch (error) {
+      console.error('error', error);
       throw new InternalServerErrorException('');
     }
   }

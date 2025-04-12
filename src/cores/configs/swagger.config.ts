@@ -20,15 +20,7 @@ Bearer token authentication required for protected endpoints.
   `,
     )
     .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        description: 'Enter JWT token in the format: Bearer <token>',
-      },
-      'access-token',
-    )
+    .addBearerAuth()
     .addTag('Authentication', 'User login, logout, and token operations')
     .addTag(
       'Users',
