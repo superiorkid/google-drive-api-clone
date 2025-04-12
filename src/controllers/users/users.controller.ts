@@ -18,8 +18,8 @@ import {
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Request } from 'express';
-import { Roles } from 'src/cores/decorators/roles.decorator';
 
+import { Roles } from 'src/cores/decorators/roles.decorator';
 import { UsersService } from 'src/services/users/users.service';
 
 @Controller('users')
