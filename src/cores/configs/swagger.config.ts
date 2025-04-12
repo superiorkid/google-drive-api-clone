@@ -30,6 +30,10 @@ Bearer token authentication required for protected endpoints.
       'access-token',
     )
     .addTag('Authentication', 'User login, logout, and token operations')
+    .addTag(
+      'Users',
+      'Operations related to user management such as profile retrieval, updates, and deletion',
+    )
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

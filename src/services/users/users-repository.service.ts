@@ -9,15 +9,24 @@ export class UsersRepositoryService {
   constructor(private db: DatabasesService) {}
 
   async findOneById(id: string) {
-    return this.db.user.findUnique({ where: { id } });
+    return this.db.user.findUnique({
+      where: { id },
+      include: { driveItems: true },
+    });
   }
 
   async findOneByEmail(email: string) {
-    return this.db.user.findUnique({ where: { email } });
+    return this.db.user.findUnique({
+      where: { email },
+      include: { driveItems: true },
+    });
   }
 
   async findOneByUsername(username: string) {
-    return this.db.user.findUnique({ where: { username } });
+    return this.db.user.findUnique({
+      where: { username },
+      include: { driveItems: true },
+    });
   }
 
   async findMany(params: { take: number; skip: number }) {

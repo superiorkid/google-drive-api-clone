@@ -30,6 +30,7 @@ model User {
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt() @map("updated_at")
   authTokens   AuthToken[]
+  driveItems   DriveItem[]
 
   @@index([username, email, createdAt])
   @@map("users")
@@ -42,7 +43,7 @@ model AuthToken {
   expiresAt DateTime      @map("expires_at")
   used      Boolean       @default(false)
   usedAt    DateTime?     @map("used_at")
-  userId    String
+  userId    String        @map("user_id")
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt @map("updated_at")
@@ -54,4 +55,31 @@ model AuthToken {
 enum AuthTokenType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
+}
+
+enum DriveItemType {
+  FILE
+  FOLDER
+}
+
+// INFO: https://chatgpt.com/c/67f9d34c-761c-800f-a34f-45711efc54d7
+
+model DriveItem {
+  id        String        @id @default(cuid())
+  name      String
+  type      DriveItemType
+  size      Int? // in bytes, null for folders
+  mimeType  String?       @map("mime_type") // only for files
+  url       String? // file URL/path, null for folders
+  parentId  String?       @map("parent_id")
+  parent    DriveItem?    @relation("FolderContents", fields: [parentId], references: [id])
+  children  DriveItem[]   @relation("FolderContents")
+  ownerId   String        @map("owner_id")
+  owner     User          @relation(fields: [ownerId], references: [id])
+  isTrashed Boolean       @default(false) @map("is_trashed")
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  @@index([ownerId, parentId, isTrashed])
+  @@map("drive_items")
 }
