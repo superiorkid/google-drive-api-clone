@@ -68,12 +68,11 @@ export class UsersService {
 
       return {
         success: true,
-        message: '',
+        message: 'Users retrieved successfully.',
         data: users,
       };
     } catch (error) {
-      console.error('error', error);
-      throw new InternalServerErrorException('');
+      throw new InternalServerErrorException('Failed to retrieve users.');
     }
   }
 }

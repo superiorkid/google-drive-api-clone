@@ -31,10 +31,20 @@ export class UsersController {
   @Get()
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: '', description: '' })
-  @ApiOkResponse({ description: '' })
-  @ApiInternalServerErrorResponse({ description: '' })
-  @ApiUnauthorizedResponse({ description: '' })
+  @ApiOperation({
+    summary: 'Get list of users',
+    description:
+      'Only accessible to admin users. Returns a list of all registered users.',
+  })
+  @ApiOkResponse({ description: 'Successfully retrieved the list of users.' })
+  @ApiInternalServerErrorResponse({
+    description:
+      'An unexpected error occurred while retrieving the users list.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Unauthorized. You must be logged in with an admin account to access this resource.',
+  })
   async usersList() {
     return this.usersService.usersList();
   }
