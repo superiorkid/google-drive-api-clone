@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { access, mkdir, writeFile } from 'fs/promises';
 import { MemoryStoredFile } from 'nestjs-form-data';
+import { access, mkdir, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 @Injectable()
@@ -28,6 +28,21 @@ export class StorageService {
       };
     } catch (error) {
       throw new Error(`Failed to upload file: ${error.message}`);
+    }
+  }
+
+  async delete(fileUrl: string) {
+    try {
+      const relativePath = fileUrl.startsWith('/') ? fileUrl.slice(1) : fileUrl;
+      const fullPath = join(process.cwd(), relativePath);
+      await unlink(fullPath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        console.warn(`File not found: ${fileUrl}`);
+        return;
+      }
+
+      throw new Error(`Failed to delete file: ${error.message}`);
     }
   }
 

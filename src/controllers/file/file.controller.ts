@@ -109,15 +109,97 @@ export class FileController {
   async updateFile() {}
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Move file to trash',
+    description:
+      'Moves the specified file to trash for the authenticated user. Files in trash can be restored or permanently deleted.',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Unauthorized. The user must be authenticated to perform this action.',
+  })
+  @ApiOkResponse({
+    description: 'File was successfully moved to trash.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'An unexpected error occurred while moving the file to trash.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'File not found. The file with the given ID does not exist or does not belong to the user.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The unique identifier of the file to move to trash.',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+  })
   async softDeleteFile(@Req() request: Request, @Param('id') id: string) {
-    return this.fileService.softDelete();
+    const userId = request.user?.['sub'];
+    return this.fileService.trash(id, userId);
   }
 
   @Patch(':id/restore')
-  async restoreFile() {}
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Restore a file from trash',
+    description:
+      'Restores a previously deleted file from the trash back to the active files.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The unique identifier of the file to be restored',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'File not found. The file with the given ID does not exist in trash or does not belong to the user.',
+  })
+  @ApiForbiddenResponse({
+    description: 'File not in trash.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized. You must be logged in to restore files.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'An unexpected error occurred while attempting to restore the file.',
+  })
+  async restoreFile(@Req() request: Request, @Param('id') id: string) {
+    const userId = request.user?.['sub'];
+    return this.fileService.restore(id, userId);
+  }
 
   @Delete(':id/permanent')
-  async permanentDeleteFile() {}
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Permanently delete a file or folder',
+    description:
+      'Permanently deletes a file or folder (and all of its children, if any) from both the database and the storage.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the file or folder to permanently delete',
+  })
+  @ApiOkResponse({
+    description: 'File or folder permanently deleted successfully.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'The file or folder was not found or does not belong to the user.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'An unexpected error occurred while deleting the file or folder.',
+  })
+  async permanentDeleteFile(@Req() request: Request, @Param('id') id: string) {
+    const userId = request.user?.['sub'];
+    await this.fileService.permanentDelete(id, userId);
+    return {
+      success: true,
+      message: 'File or folder permanently deleted.',
+    };
+  }
 
   @Get(':id/download')
   async downloadFile() {}

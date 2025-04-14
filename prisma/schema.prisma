@@ -72,7 +72,7 @@ model DriveItem {
   mimeType  String?       @map("mime_type") // only for files
   url       String? // file URL/path, null for folders
   parentId  String?       @map("parent_id")
-  parent    DriveItem?    @relation("FolderContents", fields: [parentId], references: [id])
+  parent    DriveItem?    @relation("FolderContents", fields: [parentId], references: [id], onDelete: Cascade)
   children  DriveItem[]   @relation("FolderContents")
   ownerId   String        @map("owner_id")
   owner     User          @relation(fields: [ownerId], references: [id])
