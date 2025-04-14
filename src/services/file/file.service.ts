@@ -11,6 +11,7 @@ import { join } from 'node:path';
 
 import { PREVIEWABLE_MIMETYPES } from 'src/cores/constants/previewable-mimetypes.constant';
 import { CreateFileDTO } from 'src/cores/dtos/create-file.dto';
+import { UpdateDriveItemDTO } from 'src/cores/dtos/update-driver-item.dto';
 import { DriveItemsRepository } from '../drive-items/drive-items.repository';
 import { StorageService } from '../storage/storage.service';
 
@@ -167,6 +168,34 @@ export class FileService {
 
     const stream = createReadStream(filePath);
     stream.pipe(response);
+  }
+
+  async update(params: {
+    id: string;
+    ownerId: string;
+    data: UpdateDriveItemDTO;
+  }) {
+    const { id, data, ownerId } = params;
+    const file = await this.driveItemRepository.findById({ id, ownerId });
+
+    if (!file) throw new NotFoundException('File not found');
+    if (file.deletedAt)
+      throw new ForbiddenException('Cannot update a deleted file');
+
+    try {
+      const { name, parentId } = data;
+      await this.driveItemRepository.update({
+        id,
+        updateDriveItemDTO: { name, parentId },
+      });
+
+      return {
+        success: true,
+        message: 'File updated successfully',
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to update file');
+    }
   }
 
   private isFilePreviewable(mimeType: string) {

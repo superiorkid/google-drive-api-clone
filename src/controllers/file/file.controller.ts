@@ -30,6 +30,7 @@ import { Request, Response } from 'express';
 import { FormDataRequest } from 'nestjs-form-data';
 
 import { CreateFileDTO } from 'src/cores/dtos/create-file.dto';
+import { UpdateDriveItemDTO } from 'src/cores/dtos/update-driver-item.dto';
 import { FileService } from 'src/services/file/file.service';
 
 @Controller('files')
@@ -106,7 +107,52 @@ export class FileController {
   }
 
   @Patch(':id')
-  async updateFile() {}
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update file or folder',
+    description:
+      'Updates metadata for a specific file or folder such as name or parent directory',
+  })
+  @ApiBody({
+    type: UpdateDriveItemDTO,
+    description:
+      'Payload containing the fields to update (name and/or parentId)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID of the file/folder to update',
+  })
+  @ApiOkResponse({
+    description: 'File/folder updated successfully',
+  })
+  @ApiNotFoundResponse({
+    description: 'File/folder not found with the provided ID',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Server error occurred while updating the file/folder',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request payload or parameters',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User is not authenticated',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'User is not authorized to update this file or file is deleted',
+  })
+  async updateFile(
+    @Req() request: Request,
+    @Param('id') id: string,
+    @Body() updateDriveItemDTO: UpdateDriveItemDTO,
+  ) {
+    const userId = request.user?.['sub'];
+    return this.fileService.update({
+      id,
+      ownerId: userId,
+      data: updateDriveItemDTO,
+    });
+  }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
