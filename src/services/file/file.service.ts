@@ -2,16 +2,17 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { createReadStream } from 'node:fs';
 
+import { join } from 'node:path';
 import { PREVIEWABLE_MIMETYPES } from 'src/cores/constants/previewable-mimetypes.constant';
 import { CreateFileDTO } from 'src/cores/dtos/create-file.dto';
 import { DriveItemsRepository } from '../drive-items/drive-items.repository';
 import { StorageService } from '../storage/storage.service';
-import { join } from 'node:path';
 
 @Injectable()
 export class FileService {
@@ -32,7 +33,7 @@ export class FileService {
         ownerId,
         parentId,
         mimeType: file.mimeType,
-        name: savedFile.filename,
+        name: file.originalName,
         size: file.size,
         type: 'FILE',
         url: savedFile.path,
@@ -46,6 +47,28 @@ export class FileService {
       console.error('error', error);
       throw new InternalServerErrorException(
         `Failed to upload file: ${error.message}`,
+      );
+    }
+  }
+
+  async softDelete() {}
+
+  async detail(itemId: string, ownerId: string) {
+    try {
+      const driveItem = await this.driveItemRepository.findById({
+        ownerId,
+        id: itemId,
+      });
+      if (!driveItem) throw new NotFoundException('Drive item not found.');
+
+      return {
+        success: true,
+        message: 'File detail retrieved successfully.',
+        data: driveItem,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to retrieve file details.',
       );
     }
   }

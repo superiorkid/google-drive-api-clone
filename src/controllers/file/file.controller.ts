@@ -19,6 +19,7 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -74,13 +75,43 @@ export class FileController {
   }
 
   @Get(':id')
-  async detailFile() {}
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get file detail',
+    description:
+      'Retrieves the detail of a file owned by the authenticated user by its ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The unique identifier of the file to retrieve',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'Unauthorized. The user must be authenticated to access this endpoint.',
+  })
+  @ApiOkResponse({
+    description: 'Successfully retrieved the file details.',
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'An unexpected error occurred while retrieving the file details.',
+  })
+  @ApiNotFoundResponse({
+    description:
+      'File not found. The file with the provided ID does not exist or does not belong to the user.',
+  })
+  async detailFile(@Req() request: Request, @Param('id') id: string) {
+    const userId = request.user?.['sub'];
+    return this.fileService.detail(id, userId);
+  }
 
   @Patch(':id')
   async updateFile() {}
 
   @Delete(':id')
-  async softDeleteFile() {}
+  async softDeleteFile(@Req() request: Request, @Param('id') id: string) {
+    return this.fileService.softDelete();
+  }
 
   @Patch(':id/restore')
   async restoreFile() {}
