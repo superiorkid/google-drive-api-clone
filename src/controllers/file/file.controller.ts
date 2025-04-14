@@ -17,8 +17,11 @@ import {
   ApiBody,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -32,7 +35,7 @@ import { FileService } from 'src/services/file/file.service';
 @ApiTags('Drive - Files')
 @ApiBearerAuth()
 export class FileController {
-  constructor(private fileSerivice: FileService) {}
+  constructor(private fileService: FileService) {}
 
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
@@ -67,7 +70,7 @@ export class FileController {
     const userId = request.user?.['sub'];
     createFileDTO.parentId =
       createFileDTO.parentId === '' ? undefined : createFileDTO.parentId;
-    return this.fileSerivice.uploadFile({ createFileDTO, ownerId: userId });
+    return this.fileService.uploadFile({ createFileDTO, ownerId: userId });
   }
 
   @Get(':id')
@@ -89,9 +92,33 @@ export class FileController {
   async downloadFile() {}
 
   @Get(':id/preview')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Preview a file',
+    description:
+      'Returns a preview of the file if the file type is supported and the user has access to it.',
+  })
+  @ApiOkResponse({
+    description: 'File preview returned successfully',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'Access denied - either you dont have permission or the file type cannot be previewed',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - authentication required',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Unique identifier of the file to preview',
+    example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+  })
   async preview(
     @Req() request: Request,
     @Res() response: Response,
     @Param('id') id: string,
-  ) {}
+  ) {
+    const userId = request.user?.['sub'];
+    return this.fileService.previewFile({ id, response, ownerId: userId });
+  }
 }

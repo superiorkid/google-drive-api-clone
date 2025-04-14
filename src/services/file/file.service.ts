@@ -6,12 +6,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { createReadStream } from 'node:fs';
-import { join } from 'node:path';
 
 import { PREVIEWABLE_MIMETYPES } from 'src/cores/constants/previewable-mimetypes.constant';
 import { CreateFileDTO } from 'src/cores/dtos/create-file.dto';
 import { DriveItemsRepository } from '../drive-items/drive-items.repository';
 import { StorageService } from '../storage/storage.service';
+import { join } from 'node:path';
 
 @Injectable()
 export class FileService {
@@ -27,7 +27,6 @@ export class FileService {
 
     try {
       const savedFile = await this.storageService.save(file, `user-${ownerId}`);
-      const fileUrl = this.generateFileURL(savedFile.filename);
 
       await this.driveItemRepository.createFile({
         ownerId,
@@ -36,7 +35,7 @@ export class FileService {
         name: savedFile.filename,
         size: file.size,
         type: 'FILE',
-        url: fileUrl,
+        url: savedFile.path,
       });
 
       return {
@@ -57,23 +56,23 @@ export class FileService {
     response: Response;
   }) {
     const { id, ownerId, response } = params;
+
     const file = await this.driveItemRepository.findById({ id, ownerId });
 
     if (!file || !this.isFilePreviewable(file.mimeType as string)) {
       throw new ForbiddenException('Preview not allowed for this file type.');
     }
 
+    const filePath = join(process.cwd(), file.url as string);
+
     response.setHeader('Content-Type', file.mimeType as string);
-    response.setHeader('Content-Disposition', `inline; filename=${file.name}`);
+    response.setHeader(
+      'Content-Disposition',
+      `inline; filename="${file.name}"`,
+    );
 
-    const stream = createReadStream(file.url as string);
+    const stream = createReadStream(filePath);
     stream.pipe(response);
-  }
-
-  private generateFileURL(filename: string) {
-    const baseUrl = this.configService.getOrThrow<string>('APP_URL');
-    const uploadPath = join('uploads', filename).replace(/\\/g, '/');
-    return `${baseUrl}/${uploadPath}`;
   }
 
   private isFilePreviewable(mimeType: string) {

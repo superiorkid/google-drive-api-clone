@@ -24,7 +24,7 @@ export class StorageService {
 
       return {
         filename: uniqueFilename,
-        path: filePath,
+        path: `/uploads/${uniqueFilename}`,
       };
     } catch (error) {
       throw new Error(`Failed to upload file: ${error.message}`);
