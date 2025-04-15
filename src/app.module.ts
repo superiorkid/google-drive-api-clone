@@ -5,6 +5,7 @@ import { NestjsFormDataModule } from 'nestjs-form-data';
 
 import { AuthenticationModule } from './modules/authentication/authentication.module';
 import { DatabasesModule } from './modules/databases/databases.module';
+import { DriveItemPermissionsModule } from './modules/drive-item-permissions/drive-item-permissions.module';
 import { DriveItemsModule } from './modules/drive-items/drive-items.module';
 import { EmailsModule } from './modules/emails/emails.module';
 import { EncryptionsModule } from './modules/encryptions/encryptions.module';
@@ -25,6 +26,7 @@ import { UsersModule } from './modules/users/users.module';
     TypedEventEmitterModule,
     StorageModule,
     DriveItemsModule,
+    DriveItemPermissionsModule,
   ],
 })
 export class AppModule {}
