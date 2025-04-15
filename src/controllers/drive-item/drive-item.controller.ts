@@ -56,6 +56,27 @@ export class DriveItemController {
     return this.driveItemsService.driveItems(userId);
   }
 
+  @Get('trash')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get trashed items',
+    description:
+      'Retrieves all files and folders that have been moved to trash by the authenticated user.',
+  })
+  @ApiOkResponse({
+    description: 'Successfully retrieved trashed items',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User is not authorized. Authentication is required.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected error occurred while retrieving trashed items.',
+  })
+  async getTrashItems(@Req() request: Request) {
+    const userId = request.user?.['sub'];
+    return this.driveItemsService.getTrashItems(userId);
+  }
+
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -233,26 +254,5 @@ export class DriveItemController {
   async restoreFile(@Req() request: Request, @Param('id') id: string) {
     const userId = request.user?.['sub'];
     return this.driveItemsService.restore(id, userId);
-  }
-
-  @Get('trash')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Get trashed items',
-    description:
-      'Retrieves all files and folders that have been moved to trash by the authenticated user.',
-  })
-  @ApiOkResponse({
-    description: 'Successfully retrieved trashed items',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'User is not authorized. Authentication is required.',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Unexpected error occurred while retrieving trashed items.',
-  })
-  async getTrashItems(@Req() request: Request) {
-    const userId = request.user?.['sub'];
-    return this.driveItemsService.getTrashItems(userId);
   }
 }
