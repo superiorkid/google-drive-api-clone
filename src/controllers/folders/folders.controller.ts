@@ -1,4 +1,9 @@
 import { Controller } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('folders')
-export class FoldersController {}
+@ApiTags('Folders')
+@ApiBearerAuth()
+export class FoldersController {
+  constructor() {}
+}

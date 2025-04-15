@@ -27,6 +27,10 @@ Bearer token authentication required for protected endpoints.
       'Operations related to user management such as profile retrieval, updates, and deletion',
     )
     .addTag(
+      'Drive Item',
+      'Operations for managing drive items such as files and folders, including updating metadata, moving to trash, restoring, and permanent deletion',
+    )
+    .addTag(
       'Drive - Files',
       'Operations related to file management, including upload, download, and deletion',
     )
