@@ -11,7 +11,12 @@ export class StorageService {
     this.ensureUploadDirectory();
   }
 
-  async save(file: MemoryStoredFile, prefix: string = '') {
+  async save(params: {
+    file: MemoryStoredFile;
+    username: string;
+    prefix: string;
+  }) {
+    const { file, prefix = '', username } = params;
     try {
       const fileExt = file.originalName.split('.').pop();
       const uniqueId = Array.from({ length: 8 }, () =>

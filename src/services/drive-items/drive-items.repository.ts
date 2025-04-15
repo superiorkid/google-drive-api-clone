@@ -55,24 +55,32 @@ export class DriveItemsRepository {
   }
 
   async findByParent(parentId: string) {
-    return this.db.driveItem.findFirst({ where: { parentId } });
+    return this.db.driveItem.findFirst({
+      where: { parentId },
+      include: { children: true },
+    });
   }
 
   async findRootItems(userId: string) {
     return this.db.driveItem.findMany({
-      where: { AND: [{ ownerId: userId }, { parentId: null }] },
+      where: {
+        AND: [{ ownerId: userId }, { parentId: null }, { deletedAt: null }],
+      },
+      include: { children: true },
     });
   }
 
   async searchByName(ownerId: string, name: string) {
     return this.db.driveItem.findMany({
       where: { AND: [{ ownerId }, { name: { contains: name } }] },
+      include: { children: true },
     });
   }
 
   async getTrashedItems(ownerId: string) {
     return this.db.driveItem.findMany({
       where: { AND: [{ ownerId }, { NOT: { deletedAt: null } }] },
+      include: { children: true },
     });
   }
 

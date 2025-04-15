@@ -141,6 +141,45 @@ export class DriveItemsService {
     }
   }
 
+  async detail(itemId: string, ownerId: string) {
+    try {
+      const driveItem = await this.driveItemRepository.findById({
+        ownerId,
+        id: itemId,
+      });
+      if (!driveItem) throw new NotFoundException('Drive item not found.');
+
+      return {
+        success: true,
+        message: 'File detail retrieved successfully.',
+        data: driveItem,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to retrieve file details.',
+      );
+    }
+  }
+
+  async getTrashItems(ownerId: string) {
+    try {
+      const trashedItems =
+        await this.driveItemRepository.getTrashedItems(ownerId);
+      return {
+        success: true,
+        message: 'Trashed items retrieved successfully.',
+        data: trashedItems,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to retrieve trashed items.',
+      );
+    }
+  }
+
   async restore(itemId: string, ownerId: string) {
     const driveItem = await this.driveItemRepository.findById({
       ownerId,

@@ -4,7 +4,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { createReadStream } from 'node:fs';
 import { join } from 'node:path';
@@ -13,21 +12,28 @@ import { PREVIEWABLE_MIMETYPES } from 'src/cores/constants/previewable-mimetypes
 import { CreateFileDTO } from 'src/cores/dtos/create-file.dto';
 import { DriveItemsRepository } from '../drive-items/drive-items.repository';
 import { StorageService } from '../storage/storage.service';
+import { UsersRepositoryService } from '../users/users-repository.service';
 
 @Injectable()
 export class FileService {
   constructor(
     private driveItemRepository: DriveItemsRepository,
     private storageService: StorageService,
-    private configService: ConfigService,
+    private userRepository: UsersRepositoryService,
   ) {}
 
   async uploadFile(params: { createFileDTO: CreateFileDTO; ownerId: string }) {
     const { createFileDTO, ownerId } = params;
     const { file, parentId } = createFileDTO;
 
+    const user = await this.userRepository.findOneById(ownerId);
+
     try {
-      const savedFile = await this.storageService.save(file, `user-${ownerId}`);
+      const savedFile = await this.storageService.save({
+        file,
+        username: user?.username as string,
+        prefix: `usser-${ownerId}`,
+      });
 
       await this.driveItemRepository.createFile({
         ownerId,
@@ -47,29 +53,6 @@ export class FileService {
       console.error('error', error);
       throw new InternalServerErrorException(
         `Failed to upload file: ${error.message}`,
-      );
-    }
-  }
-
-  async detail(itemId: string, ownerId: string) {
-    try {
-      const driveItem = await this.driveItemRepository.findById({
-        ownerId,
-        id: itemId,
-      });
-      if (!driveItem) throw new NotFoundException('Drive item not found.');
-
-      return {
-        success: true,
-        message: 'File detail retrieved successfully.',
-        data: driveItem,
-      };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new InternalServerErrorException(
-        'Failed to retrieve file details.',
       );
     }
   }

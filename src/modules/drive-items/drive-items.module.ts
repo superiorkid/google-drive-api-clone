@@ -9,9 +9,10 @@ import { FileService } from 'src/services/file/file.service';
 import { FoldersService } from 'src/services/folders/folders.service';
 import { DatabasesModule } from '../databases/databases.module';
 import { StorageModule } from '../storage/storage.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [StorageModule, DatabasesModule],
+  imports: [StorageModule, DatabasesModule, UsersModule],
   controllers: [FileController, FoldersController, DriveItemController],
   providers: [
     FileService,
