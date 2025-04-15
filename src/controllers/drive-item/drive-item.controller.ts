@@ -28,11 +28,33 @@ import { Request, Response } from 'express';
 import { UpdateDriveItemDTO } from 'src/cores/dtos/update-driver-item.dto';
 import { DriveItemsService } from 'src/services/drive-items/drive-items.service';
 
-@Controller('drive-item')
+@Controller('drive-items')
 @ApiTags('Drive Item')
 @ApiBearerAuth()
 export class DriveItemController {
   constructor(private driveItemsService: DriveItemsService) {}
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get root drive items',
+    description:
+      'Retrieves the list of root-level files and folders owned by the authenticated user.',
+  })
+  @ApiOkResponse({
+    description: 'Successfully retrieved the list of root drive items',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'User is not authorized. Authentication is required to access drive items.',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected error occurred while retrieving drive items.',
+  })
+  async driveItemList(@Req() request: Request) {
+    const userId = request.user?.['sub'];
+    return this.driveItemsService.driveItems(userId);
+  }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)

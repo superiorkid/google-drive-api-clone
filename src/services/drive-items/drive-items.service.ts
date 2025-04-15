@@ -164,4 +164,17 @@ export class DriveItemsService {
       );
     }
   }
+
+  async driveItems(ownerId: string) {
+    try {
+      const items = await this.driveItemRepository.findRootItems(ownerId);
+      return {
+        success: true,
+        message: 'Drive items retrieved successfully',
+        data: items,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve drive items');
+    }
+  }
 }
