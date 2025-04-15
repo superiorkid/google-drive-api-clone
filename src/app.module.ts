@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { NestjsFormDataModule } from 'nestjs-form-data';
 
 import { AuthenticationModule } from './modules/authentication/authentication.module';
@@ -18,6 +20,7 @@ import { UsersModule } from './modules/users/users.module';
     ConfigModule.forRoot({ isGlobal: true }),
     EventEmitterModule.forRoot(),
     NestjsFormDataModule.config({ isGlobal: true }),
+    ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 60 }] }),
     AuthenticationModule,
     UsersModule,
     DatabasesModule,
@@ -28,5 +31,6 @@ import { UsersModule } from './modules/users/users.module';
     DriveItemsModule,
     DriveItemPermissionsModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

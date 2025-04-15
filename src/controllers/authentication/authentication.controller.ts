@@ -24,6 +24,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { User } from '@prisma/client';
 import { Request } from 'express';
 
@@ -48,6 +49,7 @@ export class AuthenticationController {
 
   @Public()
   @Post('sign-up')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Register a new user.',
@@ -72,6 +74,7 @@ export class AuthenticationController {
 
   @Public()
   @Post('sign-in')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @UseGuards(LocalGuard)
   @ApiOperation({
     summary: 'User login',

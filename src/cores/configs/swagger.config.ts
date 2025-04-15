@@ -32,14 +32,13 @@ All protected endpoints require Bearer token authentication in the format:
 \`Authorization: Bearer <access_token>\`
 
 ## Rate Limiting
-API is rate limited to 100 requests per minute per authenticated user.
 
-## Error Handling
-Standard HTTP status codes with JSON error responses containing:
-- \`statusCode\`: The HTTP status code
-- \`message\`: Human-readable error description
-- \`timestamp\`: When the error occurred
-- \`path\`: The requested endpoint
+| Endpoint Category      | Time Window | Max Requests | Protection Purpose                  |
+|------------------------|-------------|--------------|--------------------------------------|
+| **Auth Routes**        | 60 seconds  | 10 calls   | Prevent brute-force attacks          |
+| **File Uploads**       | 60 seconds  | 5 calls    | Protect server resources             |
+| **All Other Endpoints**| 60 seconds  | 60 calls  | Balanced protection and usability    |
+
 `,
     )
     .setVersion('1.0')

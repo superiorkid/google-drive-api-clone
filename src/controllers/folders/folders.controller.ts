@@ -16,6 +16,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 
 import { CreateFolderDTO } from 'src/cores/dtos/create-folder.dto';
@@ -28,6 +29,7 @@ export class FoldersController {
   constructor(private folderService: FoldersService) {}
 
   @Post()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create a new folder',

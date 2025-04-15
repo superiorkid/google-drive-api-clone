@@ -17,13 +17,13 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
-  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { FormDataRequest } from 'nestjs-form-data';
 
@@ -37,6 +37,7 @@ export class FileController {
   constructor(private fileService: FileService) {}
 
   @Post('upload')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   @FormDataRequest()
   @ApiConsumes('multipart/form-data')
