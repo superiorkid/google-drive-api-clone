@@ -19,18 +19,19 @@ enum Role {
 }
 
 model User {
-  id           String      @id @default(cuid())
-  username     String      @unique
-  email        String      @unique
-  password     String?
-  role         Role        @default(USER)
-  verifyAt     DateTime?   @map("verify_at")
-  lastLoginAt  DateTime?   @map("last_login_at")
-  refreshToken String?     @map("refresh_token")
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt() @map("updated_at")
-  authTokens   AuthToken[]
-  driveItems   DriveItem[]
+  id                   String                @id @default(cuid())
+  username             String                @unique
+  email                String                @unique
+  password             String?
+  role                 Role                  @default(USER)
+  verifyAt             DateTime?             @map("verify_at")
+  lastLoginAt          DateTime?             @map("last_login_at")
+  refreshToken         String?               @map("refresh_token")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt() @map("updated_at")
+  authTokens           AuthToken[]
+  driveItems           DriveItem[]
+  driveItemPermissions DriveItemPermission[]
 
   @@index([username, email, createdAt])
   @@map("users")
@@ -65,21 +66,41 @@ enum DriveItemType {
 // INFO: https://chatgpt.com/c/67f9d34c-761c-800f-a34f-45711efc54d7
 
 model DriveItem {
-  id        String        @id @default(cuid())
-  name      String
-  type      DriveItemType
-  size      Int? // in bytes, null for folders
-  mimeType  String?       @map("mime_type") // only for files
-  url       String? // file URL/path, null for folders
-  parentId  String?       @map("parent_id")
-  parent    DriveItem?    @relation("FolderContents", fields: [parentId], references: [id], onDelete: Cascade)
-  children  DriveItem[]   @relation("FolderContents")
-  ownerId   String        @map("owner_id")
-  owner     User          @relation(fields: [ownerId], references: [id])
-  deletedAt DateTime?     @map("deleted_at")
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime      @updatedAt @map("updated_at")
+  id          String                @id @default(cuid())
+  name        String
+  type        DriveItemType
+  size        Int? // in bytes, null for folders
+  mimeType    String?               @map("mime_type") // only for files
+  url         String? // file URL/path, null for folders
+  parentId    String?               @map("parent_id")
+  parent      DriveItem?            @relation("FolderContents", fields: [parentId], references: [id], onDelete: Cascade)
+  children    DriveItem[]           @relation("FolderContents")
+  ownerId     String                @map("owner_id")
+  owner       User                  @relation(fields: [ownerId], references: [id])
+  deletedAt   DateTime?             @map("deleted_at")
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+  permissions DriveItemPermission[]
 
   @@index([ownerId, parentId, deletedAt])
   @@map("drive_items")
+}
+
+enum PermissionType {
+  READ
+  WRITE
+}
+
+model DriveItemPermission {
+  id          String         @id @default(cuid())
+  userId      String         @map("user_id")
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  driveItemId String         @map("drive_item_id")
+  permission  PermissionType
+  driveItem   DriveItem      @relation(fields: [driveItemId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@unique([userId, driveItemId])
+  @@map("drive_item_permissions")
 }
