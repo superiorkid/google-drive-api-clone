@@ -248,7 +248,32 @@ export class FileController {
   }
 
   @Get(':id/download')
-  async downloadFile() {}
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Download file or folder',
+    description:
+      'Downloads a file directly, or a folder as a ZIP archive including all nested contents.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the file or folder to download',
+  })
+  @ApiOkResponse({
+    description:
+      'The file is downloaded successfully. If a folder, a ZIP archive is streamed.',
+  })
+  async downloadFile(
+    @Req() request: Request,
+    @Res() response: Response,
+    @Param('id') id: string,
+  ) {
+    const userId = request.user?.['sub'];
+    await this.fileService.download(id, userId, response);
+    return {
+      success: true,
+      message: 'Download initiated successfully',
+    };
+  }
 
   @Get(':id/preview')
   @HttpCode(HttpStatus.OK)

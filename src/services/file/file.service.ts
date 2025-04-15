@@ -5,8 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as archiver from 'archiver';
 import { Response } from 'express';
-import { createReadStream } from 'node:fs';
+import { createReadStream, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { PREVIEWABLE_MIMETYPES } from 'src/cores/constants/previewable-mimetypes.constant';
@@ -168,6 +169,53 @@ export class FileService {
 
     const stream = createReadStream(filePath);
     stream.pipe(response);
+  }
+
+  async download(id: string, ownerId: string, response: Response) {
+    const item = await this.driveItemRepository.findById({ id, ownerId });
+    if (!item) throw new NotFoundException('');
+
+    const itemPath = join(process.cwd(), item.url as string);
+    const isFolder = item.type === 'FOLDER';
+
+    if (isFolder) {
+      response.header('Content-Type', 'application/zip');
+      response.header(
+        'Content-Desposition',
+        `attachment; filename="${item.name}.zip"`,
+      );
+
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.pipe(response);
+
+      const addFolderToArchieve = (
+        folderPath: string,
+        baseInZip: string = '',
+      ) => {
+        const contents = readdirSync(folderPath);
+        for (const name of contents) {
+          const fullPath = join(folderPath, name);
+          const stat = statSync(fullPath);
+          const zipPath = join(baseInZip, name);
+          if (stat.isDirectory()) {
+            addFolderToArchieve(fullPath, zipPath);
+          } else {
+            archive.file(fullPath, { name: zipPath });
+          }
+        }
+      };
+
+      addFolderToArchieve(itemPath, item.mimeType as string);
+      archive.finalize();
+    } else {
+      response.setHeader('Content-Type', item.mimeType as string);
+      response.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${item.name}"`,
+      );
+      const stream = createReadStream(itemPath);
+      stream.pipe(response);
+    }
   }
 
   async update(params: {
