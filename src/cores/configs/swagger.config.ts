@@ -34,6 +34,7 @@ Bearer token authentication required for protected endpoints.
       'Drive - Files',
       'Operations related to file management, including upload, download, and deletion',
     )
+    .addTag('Drive - Folders', 'Operations')
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

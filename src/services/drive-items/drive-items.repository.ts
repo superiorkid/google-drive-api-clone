@@ -37,9 +37,9 @@ export class DriveItemsRepository {
     ownerId: string;
   }) {
     const { createFolderDTO, ownerId } = params;
-    const { name, type, parentId } = createFolderDTO;
+    const { name, parentId } = createFolderDTO;
     return this.db.driveItem.create({
-      data: { name, type, parentId, ownerId },
+      data: { name, parentId, ownerId, type: DriveItemType.FOLDER },
     });
   }
 
